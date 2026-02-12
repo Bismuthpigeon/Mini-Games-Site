@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owl Rhythm Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-image: url('23455957.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+        }
+
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .stat {
+            margin-bottom: 10px;
+        }
+
+        #combo-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffd700;
+            transition: transform 0.1s;
+        }
+
+        #feedback {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 20px #ffd700;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 20;
+        }
+
+        #tracks {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            z-index: 5;
+        }
+
+        .track {
+            position: relative;
+            width: 80px;
+            height: 600px;
+            /* background: rgba(255, 255, 255, 0.1); */
+            border-radius: 40px;
+        }
+
+        .target {
+            position: absolute;
+            bottom: 0;
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background: rgba(0, 0, 0, 0.4);
+            transition: transform 0.1s, background 0.1s;
+        }
+
+        .target.active {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #fff;
+        }
+
+        .note {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, #fff, #ffd700);
+            border-radius: 50%;
+            left: 5px;
+            box-shadow: 0 0 15px #ffd700;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            border: 2px solid #ffd700;
+        }
+
+        #game-over h1 {
+            color: #ff4444;
+            font-size: 48px;
+            margin-top: 0;
+        }
+
+        button.restart-btn {
+            background: #ffd700;
+            border: none;
+            padding: 10px 30px;
+            font-size: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        button.restart-btn:hover {
+            background: #fff;
+        }
+
+        #home-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        #home-btn:hover {
+            background: #d35400;
+        }
+    </style>
+</head>
+<body>
+    <button id="home-btn" onclick="location.href='../homepage.html'">Back to Home</button>
+<div id="game-container">
+    <div id="overlay"></div>
+    
+    <div id="hud">
+        <div class="stat">Score: <span id="score">0</span></div>
+        <div class="stat">Misses: <span id="misses">0</span>/15</div>
+        <div id="combo-display">Combo: <span id="combo">0</span></div>
+    </div>
+
+    <div id="feedback">PERFECT!</div>
+
+    <div id="tracks">
+        <div class="track" data-key="ArrowLeft">
+            <div class="target" id="target-ArrowLeft">←</div>
+        </div>
+        <div class="track" data-key="ArrowUp">
+            <div class="target" id="target-ArrowUp">↑</div>
+        </div>
+        <div class="track" data-key="ArrowDown">
+            <div class="target" id="target-ArrowDown">↓</div>
+        </div>
+        <div class="track" data-key="ArrowRight">
+            <div class="target" id="target-ArrowRight">→</div>
+        </div>
+    </div>
+
+    <div id="game-over">
+        <h1>GAME OVER</h1>
+        <p>Final Score: <span id="final-score">0</span></p>
+        <p>Highest Combo: <span id="max-combo">0</span></p>
+        <button class="restart-btn" onclick="resetGame()">Try Again</button>
+    </div>
+</div>
+
+<audio id="hoot-sound" src="freesound_community-tawny-owl-echoed-35509.mp3"></audio>
+
+<script>
+    const hootSound = document.getElementById('hoot-sound');
+    const scoreElement = document.getElementById('score');
+    const missesElement = document.getElementById('misses');
+    const comboElement = document.getElementById('combo');
+    const comboDisplay = document.getElementById('combo-display');
+    const feedback = document.getElementById('feedback');
+    const gameOverScreen = document.getElementById('game-over');
+    const finalScoreElement = document.getElementById('final-score');
+    const maxComboElement = document.getElementById('max-combo');
+    const tracksContainer = document.getElementById('tracks');
+
+    const keys = ['ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight'];
+    let score = 0;
+    let misses = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let gameActive = true;
+    let speed = 4;
+    let spawnRate = 1200; // ms
+    let lastSpawnTime = 0;
+    let notes = [];
+
+    const perfectThreshold = 25; // pixels from target center
+
+    function showFeedback(text, isPerfect) {
+        feedback.textContent = text;
+        feedback.style.color = isPerfect ? '#ffd700' : '#ccc';
+        feedback.style.opacity = '1';
+        feedback.style.transform = 'translate(-50%, -60%) scale(1.2)';
+        
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translate(-50%, -50%) scale(1)';
+        }, 300);
+    }
+
+    function playHoot() {
+        const hoot = hootSound.cloneNode();
+        hoot.volume = 0.6;
+        hoot.play();
+    }
+
+    function spawnNote() {
+        if (!gameActive) return;
+        const keyIndex = Math.floor(Math.random() * 4);
+        const key = keys[keyIndex];
+        const track = document.querySelector(`.track[data-key="${key}"]`);
+        
+        const note = document.createElement('div');
+        note.className = 'note';
+        note.style.top = '-80px';
+        track.appendChild(note);
+        
+        notes.push({
+            element: note,
+            key: key,
+            position: -80,
+            hit: false
+        });
+    }
+
+    function gameLoop(timestamp) {
+        if (!gameActive) return;
+
+        // Spawning
+        if (timestamp - lastSpawnTime > spawnRate) {
+            spawnNote();
+            lastSpawnTime = timestamp;
+            // Gradually increase difficulty
+            speed += 0.03;
+            spawnRate = Math.max(300, spawnRate - 8);
+        }
+
+        // Move notes
+        for (let i = notes.length - 1; i >= 0; i--) {
+            const note = notes[i];
+            note.position += speed;
+            note.element.style.top = note.position + 'px';
+
+            // Check if missed (beyond target + some buffer)
+            if (note.position > 580 && !note.hit) {
+                note.hit = true; 
+                handleMiss();
+                note.element.remove();
+                notes.splice(i, 1);
+            }
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function handleMiss() {
+        misses++;
+        missesElement.textContent = misses;
+        combo = 0;
+        updateComboDisplay();
+        showFeedback('MISS', false);
+        
+        if (misses >= 15) {
+            endGame();
+        }
+    }
+
+    function updateComboDisplay() {
+        comboElement.textContent = combo;
+        if (combo > maxCombo) maxCombo = combo;
+        
+        // Pop effect
+        comboDisplay.style.transform = 'scale(1.2)';
+        setTimeout(() => comboDisplay.style.transform = 'scale(1)', 100);
+    }
+
+    function endGame() {
+        gameActive = false;
+        gameOverScreen.style.display = 'block';
+        finalScoreElement.textContent = score;
+        maxComboElement.textContent = maxCombo;
+    }
+
+    function resetGame() {
+        score = 0;
+        misses = 0;
+        combo = 0;
+        maxCombo = 0;
+        speed = 4;
+        spawnRate = 1200;
+        gameActive = true;
+        notes.forEach(n => n.element.remove());
+        notes = [];
+        
+        scoreElement.textContent = '0';
+        missesElement.textContent = '0';
+        comboElement.textContent = '0';
+        gameOverScreen.style.display = 'none';
+        
+        lastSpawnTime = performance.now();
+        requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (!gameActive) return;
+        if (!keys.includes(e.key)) return;
+
+        const target = document.getElementById(`target-${e.key}`);
+        target.classList.add('active');
+
+        // Check for hit
+        const targetCenterY = 520; // 600 - 80
+        
+        let closestNote = null;
+        let minDistance = Infinity;
+        let closestIndex = -1;
+
+        for (let i = 0; i < notes.length; i++) {
+            const note = notes[i];
+            if (note.key === e.key && !note.hit) {
+                const distance = Math.abs(note.position - targetCenterY);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestNote = note;
+                    closestIndex = i;
+                }
+            }
+        }
+
+        if (closestNote && minDistance < 60) {
+            closestNote.hit = true;
+            if (minDistance < perfectThreshold) {
+                playHoot();
+                score += 100;
+                combo++;
+                showFeedback('PERFECT!', true);
+            } else {
+                score += 50;
+                combo = 0;
+                showFeedback('GOOD', false);
+            }
+            
+            updateComboDisplay();
+            scoreElement.textContent = score;
+            closestNote.element.remove();
+            notes.splice(closestIndex, 1);
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (keys.includes(e.key)) {
+            const target = document.getElementById(`target-${e.key}`);
+            target.classList.remove('active');
+        }
+    });
+
+    // Start the game loop
+    requestAnimationFrame(gameLoop);
+</script>
+
+</body>
+</html>

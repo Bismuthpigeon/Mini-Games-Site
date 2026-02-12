@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>67 Clicker</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            background: url("67 background.jpg") no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        #game-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        #main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #stats-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+            border-bottom: 2px solid #ff4444;
+        }
+
+        .back-button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #cc0000;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff4444;
+            text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+
+        .level-container {
+            width: 400px;
+            text-align: center;
+        }
+
+        #xp-bar-outer {
+            width: 100%;
+            height: 20px;
+            background: #222;
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+            border: 1px solid #444;
+        }
+
+        #xp-bar-inner {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ffbb00);
+            transition: width 0.3s ease-out;
+        }
+
+        #click-button-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.05s;
+        }
+
+        #click-button {
+            width: 350px;
+            height: auto;
+            user-select: none;
+            -webkit-user-drag: none;
+            filter: drop-shadow(0 0 20px rgba(255, 68, 68, 0.3));
+        }
+
+        #click-button-container:active {
+            transform: scale(0.92);
+        }
+
+        #click-button-container:hover #click-button {
+            filter: drop-shadow(0 0 30px rgba(255, 68, 68, 0.6));
+        }
+
+        #sidebar {
+            width: 380px;
+            background: rgba(15, 15, 15, 0.95);
+            border-left: 3px solid #ff4444;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -10px 0 20px rgba(0,0,0,0.5);
+        }
+
+        .shop-title {
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #ff4444;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .shop-item {
+            background: rgba(40, 40, 40, 0.8);
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            border: 1px solid #444;
+        }
+
+        .shop-item:hover:not(.disabled) {
+            background: rgba(60, 60, 60, 0.9);
+            border-color: #ff4444;
+            transform: translateX(-5px);
+        }
+
+        .shop-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+        }
+
+        .item-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+
+        .item-name {
+            font-weight: bold;
+            font-size: 20px;
+            color: #eee;
+        }
+
+        .item-cost {
+            color: #44ff44;
+            font-weight: bold;
+        }
+
+        .item-desc {
+            font-size: 14px;
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .item-count {
+            position: absolute;
+            right: 15px;
+            bottom: 5px;
+            font-size: 12px;
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particle-move 1.2s forwards cubic-bezier(0.1, 0.8, 0.3, 1);
+            width: 50px;
+            height: auto;
+            z-index: 5;
+            opacity: 0.8;
+        }
+
+        @keyframes particle-move {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(var(--rot));
+                opacity: 0;
+            }
+        }
+
+        .floating-text {
+            position: absolute;
+            color: #44ff44;
+            font-weight: bold;
+            pointer-events: none;
+            animation: float-up 1s forwards;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,1);
+            z-index: 6;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-120px); opacity: 0; }
+        }
+
+        /* Custom Scrollbar */
+        #sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        #sidebar::-webkit-scrollbar-track {
+            background: #111;
+        }
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #ff4444;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="stats-bar">
+            <button class="back-button" onclick="location.href='../homepage.html'">Back to Home</button>
+            <div class="stat-item">
+                <div style="font-size: 14px; text-transform: uppercase;">67s Stashed</div>
+                <div id="currency-display" class="stat-value">0</div>
+            </div>
+            <div class="level-container">
+                <div style="font-size: 18px; font-weight: bold;">Level <span id="level-display">1</span></div>
+                <div id="xp-bar-outer">
+                    <div id="xp-bar-inner"></div>
+                </div>
+                <div style="font-size: 13px; margin-top: 5px; color: #ccc;" id="xp-text">0 / 100 XP</div>
+            </div>
+            <div class="stat-item">
+                <div style="font-size: 14px;">+<span id="click-rate-display">1</span> / click</div>
+                <div style="font-size: 14px; color: #44ff44;">+<span id="auto-rate-display">0</span> / sec</div>
+            </div>
+        </div>
+
+        <div id="main-area">
+            <div id="click-button-container">
+                <img src="67 button.jpg" id="click-button" alt="67 Button">
+            </div>
+        </div>
+
+        <div id="sidebar">
+            <div class="shop-title">Upgrades</div>
+            <div id="shop-items">
+                <!-- Shop items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <audio id="click-sound" src="67 - QuickSounds.com.mp3"></audio>
+
+    <script>
+        // --- GAME STATE ---
+        let state = {
+            currency: 0,
+            level: 1,
+            xp: 0,
+            xpToNext: 100,
+            items: {
+                mouse1: 0,
+                auto1: 0,
+                mouse2: 0,
+                auto2: 0,
+                mouse3: 0,
+                auto3: 0
+            }
+        };
+
+        const config = {
+            upgrades: [
+                { id: 'mouse1', type: 'click', name: 'Precision Mouse', power: 1, baseCost: 15, levelReq: 1, desc: "Each click gives +1 more 67." },
+                { id: 'auto1', type: 'auto', name: 'Automatic 67er', power: 1, baseCost: 100, levelReq: 2, desc: "Generates 1 '67' per second." },
+                { id: 'mouse2', type: 'click', name: 'Super Clicker', power: 10, baseCost: 500, levelReq: 5, desc: "Each click gives +10 more 67." },
+                { id: 'auto2', type: 'auto', name: '67 Turbine', power: 15, baseCost: 1200, levelReq: 8, desc: "Generates 15 '67's per second." },
+                { id: 'mouse3', type: 'click', name: 'Mega 67 Press', power: 100, baseCost: 10000, levelReq: 15, desc: "Each click gives +100 more 67." },
+                { id: 'auto3', type: 'auto', name: '67 Singularity', power: 250, baseCost: 50000, levelReq: 25, desc: "Generates 250 '67's per second." }
+            ]
+        };
+
+        // --- DOM ELEMENTS ---
+        const elements = {
+            currency: document.getElementById('currency-display'),
+            level: document.getElementById('level-display'),
+            xpBar: document.getElementById('xp-bar-inner'),
+            xpText: document.getElementById('xp-text'),
+            clickRate: document.getElementById('click-rate-display'),
+            autoRate: document.getElementById('auto-rate-display'),
+            shop: document.getElementById('shop-items'),
+            button: document.getElementById('click-button-container'),
+            sound: document.getElementById('click-sound'),
+            main: document.getElementById('main-area')
+        };
+
+        const upgradeElements = {};
+
+        // --- CORE LOGIC ---
+        function getClickPower() {
+            let power = 1;
+            config.upgrades.filter(u => u.type === 'click').forEach(u => {
+                power += state.items[u.id] * u.power;
+            });
+            return power;
+        }
+
+        function getAutoPower() {
+            let power = 0;
+            config.upgrades.filter(u => u.type === 'auto').forEach(u => {
+                power += state.items[u.id] * u.power;
+            });
+            return power;
+        }
+
+        function getCost(upgrade) {
+            return Math.floor(upgrade.baseCost * Math.pow(1.15, state.items[upgrade.id]));
+        }
+
+        function updateUI() {
+            elements.currency.innerText = Math.floor(state.currency).toLocaleString();
+            elements.level.innerText = state.level;
+            elements.clickRate.innerText = getClickPower().toLocaleString();
+            elements.autoRate.innerText = getAutoPower().toLocaleString();
+
+            const xpProgress = (state.xp / state.xpToNext) * 100;
+            elements.xpBar.style.width = xpProgress + '%';
+            elements.xpText.innerText = `${Math.floor(state.xp)} / ${state.xpToNext} XP`;
+
+            renderShop();
+        }
+
+        function renderShop() {
+            config.upgrades.forEach(u => {
+                const cost = getCost(u);
+                const canAfford = state.currency >= cost;
+                const isUnlocked = state.level >= u.levelReq;
+                
+                let itemEl = upgradeElements[u.id];
+                
+                // Create element if it doesn't exist
+                if (!itemEl) {
+                    itemEl = document.createElement('div');
+                    itemEl.className = 'shop-item';
+                    itemEl.onclick = () => buyUpgrade(u);
+                    elements.shop.appendChild(itemEl);
+                    upgradeElements[u.id] = itemEl;
+                }
+
+                // Update accessibility
+                const isDisabled = !canAfford || !isUnlocked;
+                if (itemEl.classList.contains('disabled') !== isDisabled) {
+                    itemEl.classList.toggle('disabled', isDisabled);
+                }
+                
+                // Update content only if changed (to prevent unnecessary DOM thrashing)
+                let newContent = '';
+                if (!isUnlocked) {
+                    newContent = `
+                        <div class="item-info">
+                            <div class="item-name">???</div>
+                            <div class="item-cost">Level ${u.levelReq}</div>
+                        </div>
+                        <div class="item-desc">Keep clicking to unlock this!</div>
+                    `;
+                } else {
+                    newContent = `
+                        <div class="item-info">
+                            <div class="item-name">${u.name}</div>
+                            <div class="item-cost">${cost.toLocaleString()} 67s</div>
+                        </div>
+                        <div class="item-desc">${u.desc}</div>
+                        <div class="item-count">${state.items[u.id]}</div>
+                    `;
+                }
+
+                if (itemEl.innerHTML !== newContent) {
+                    itemEl.innerHTML = newContent;
+                }
+            });
+        }
+
+        function buyUpgrade(upgrade) {
+            const cost = getCost(upgrade);
+            if (state.currency >= cost && state.level >= upgrade.levelReq) {
+                state.currency -= cost;
+                state.items[upgrade.id]++;
+                // Level up speed is boosted slightly by buying items
+                addXP(cost * 0.01);
+                updateUI();
+            }
+        }
+
+        function addXP(amount) {
+            state.xp += amount;
+            while (state.xp >= state.xpToNext) {
+                state.xp -= state.xpToNext;
+                state.level++;
+                state.xpToNext = Math.floor(state.xpToNext * 1.4);
+            }
+        }
+
+        function spawnParticles(x, y) {
+            // "simple 67.png" as particle
+            const particleCount = 3;
+            for(let i=0; i<particleCount; i++) {
+                const p = document.createElement('img');
+                p.src = 'simple 67.png';
+                p.className = 'particle';
+                
+                // Random values for animation
+                const tx = (Math.random() - 0.5) * 400 + 'px';
+                const ty = (Math.random() - 0.5) * 400 - 100 + 'px';
+                const rot = (Math.random() - 0.5) * 720 + 'deg';
+                
+                p.style.setProperty('--tx', tx);
+                p.style.setProperty('--ty', ty);
+                p.style.setProperty('--rot', rot);
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                
+                elements.main.appendChild(p);
+                setTimeout(() => p.remove(), 1200);
+            }
+
+            // Floating +N text
+            const f = document.createElement('div');
+            f.className = 'floating-text';
+            f.innerText = '+' + getClickPower();
+            f.style.left = (x + (Math.random() - 0.5) * 50) + 'px';
+            f.style.top = (y - 50) + 'px';
+            elements.main.appendChild(f);
+            setTimeout(() => f.remove(), 1000);
+        }
+
+        // --- EVENTS ---
+        elements.button.addEventListener('mousedown', (e) => {
+            const power = getClickPower();
+            state.currency += power;
+            addXP(1); // 1 XP per click
+            
+            // Audio
+            elements.sound.currentTime = 0;
+            elements.sound.play();
+
+            spawnParticles(e.clientX, e.clientY);
+            updateUI();
+        });
+
+        // Game Loop
+        setInterval(() => {
+            const autoProd = getAutoPower();
+            if (autoProd > 0) {
+                const perTick = autoProd / 10;
+                state.currency += perTick;
+                // Auto production gives partial XP
+                addXP(perTick * 0.05);
+                updateUI();
+            }
+        }, 100);
+
+        // Initial render
+        updateUI();
+
+    </script>
+</body>
+</html>

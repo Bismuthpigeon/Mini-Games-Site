@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slug Trail - Fill the Map!</title>
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            border: 5px solid #34495e;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        canvas {
+            display: block;
+            background-color: #34495e;
+        }
+        #ui {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        h1 { margin: 10px 0; color: #2ecc71; }
+        .stats { font-size: 1.2rem; margin-bottom: 10px; }
+        .instructions { font-size: 0.9rem; color: #bdc3c7; }
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #2ecc71;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #27ae60; }
+        #back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #e67e22;
+        }
+        #back-btn:hover { background-color: #d35400; }
+    </style>
+</head>
+<body>
+    <button id="back-btn" onclick="location.href='../homepage.html'">Back to Home</button>
+    
+    <div id="ui">
+        <h1>Slug Trail!</h1>
+        <div class="stats">Level: <span id="level-num">1</span> | Progress: <span id="progress">0</span>%</div>
+        <div class="instructions">Use Arrow Keys or WASD to move. You cannot cross your own slime!</div>
+        <button onclick="initLevel(currentLevel)" style="padding: 10px 20px; font-size: 14px; background-color: #f39c12;">Reset Level</button>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="overlay">
+            <h2 id="overlay-title">Level Complete!</h2>
+            <button id="next-btn">Next Level</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const levelText = document.getElementById('level-num');
+        const progressText = document.getElementById('progress');
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlay-title');
+        const nextBtn = document.getElementById('next-btn');
+
+        const TILE_SIZE = 40;
+        let currentLevel = 0;
+        let player = { x: 0, y: 0 };
+        let map = [];
+        let slimeMap = [];
+        let mapWidth = 0;
+        let mapHeight = 0;
+
+        const levels = [
+            // Level 1: Simple rectangle
+            {
+                width: 5, height: 5,
+                map: [
+                    0,0,0,0,0,
+                    0,0,0,0,0,
+                    0,0,0,0,0,
+                    0,0,0,0,0,
+                    0,0,0,0,0
+                ],
+                start: {x: 0, y: 0}
+            },
+            // Level 2: Some walls
+            {
+                width: 7, height: 5,
+                map: [
+                    0,0,0,0,0,0,0,
+                    0,0,0,0,1,1,0,
+                    0,0,0,0,0,0,0,
+                    0,1,1,1,1,1,0,
+                    0,0,0,0,0,0,0
+                ],
+                start: {x: 0, y: 0}
+            },
+            // Level 3: Maze-like
+            {
+                width: 8, height: 8,
+                map: [
+                    0,0,0,1,0,0,0,0,
+                    1,1,0,1,0,1,1,0,
+                    0,0,0,0,0,0,1,0,
+                    0,1,1,1,1,0,1,0,
+                    0,1,0,0,0,0,0,0,
+                    0,1,0,1,1,1,1,1,
+                    0,0,0,1,0,0,0,0,
+                    1,1,0,0,0,1,1,0
+                ],
+                start: {x: 0, y: 0}
+            },
+            // Level 4: The Core
+            {
+                width: 10, height: 10,
+                map: [
+                    0,0,0,0,0,0,0,0,0,0,
+                    0,1,1,1,0,0,1,1,1,0,
+                    0,1,0,0,0,0,0,0,1,0,
+                    0,1,0,1,1,1,1,0,1,0,
+                    0,0,0,1,0,0,1,0,0,0,
+                    0,0,0,1,0,0,1,0,0,0,
+                    0,1,0,1,1,1,1,0,1,0,
+                    0,1,0,0,0,0,0,0,1,0,
+                    0,1,1,1,0,0,1,1,1,0,
+                    0,0,0,0,0,0,0,0,0,0
+                ],
+                start: {x: 0, y: 0}
+            },
+            // Level 5: The Spiral/Sinuous Path
+            {
+                width: 6, height: 6,
+                map: [
+                    0,0,0,0,0,0,
+                    0,1,1,1,1,0,
+                    0,1,0,0,0,0,
+                    0,1,0,1,1,1,
+                    0,0,0,1,0,0,
+                    1,1,1,1,0,0
+                ],
+                start: {x: 0, y: 0}
+            }
+        ];
+
+        function initLevel(index) {
+            if (index >= levels.length) {
+                overlayTitle.innerText = "Congratulations! You finished all levels!";
+                nextBtn.innerText = "Restart";
+                nextBtn.onclick = () => { currentLevel = 0; initLevel(0); overlay.style.display = 'none'; };
+                overlay.style.display = 'flex';
+                return;
+            }
+
+            const level = levels[index];
+            mapWidth = level.width;
+            mapHeight = level.height;
+            map = [...level.map];
+            slimeMap = new Array(map.length).fill(false);
+            player = { ...level.start };
+            
+            // Mark start as slimed
+            slimeMap[player.y * mapWidth + player.x] = true;
+
+            canvas.width = mapWidth * TILE_SIZE;
+            canvas.height = mapHeight * TILE_SIZE;
+            
+            levelText.innerText = index + 1;
+            updateProgress();
+            draw();
+            overlay.style.display = 'none';
+        }
+
+        function updateProgress() {
+            const walkableCount = map.filter(t => t === 0).length;
+            const slimedCount = slimeMap.filter((s, i) => s && map[i] === 0).length;
+            const percentage = Math.floor((slimedCount / walkableCount) * 100);
+            progressText.innerText = percentage;
+
+            if (slimedCount === walkableCount) {
+                setTimeout(() => {
+                    overlayTitle.innerText = "Level Complete!";
+                    nextBtn.innerText = "Next Level";
+                    nextBtn.onclick = () => { currentLevel++; initLevel(currentLevel); };
+                    overlay.style.display = 'flex';
+                }, 100);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < mapHeight; y++) {
+                for (let x = 0; x < mapWidth; x++) {
+                    const idx = y * mapWidth + x;
+                    const isWall = map[idx] === 1;
+                    const isSlimed = slimeMap[idx];
+
+                    // Draw cell base
+                    ctx.fillStyle = isWall ? '#1a252f' : '#34495e';
+                    ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+                    // Draw slime
+                    if (isSlimed && !isWall) {
+                        ctx.fillStyle = '#2ecc71';
+                        ctx.globalAlpha = 0.6;
+                        ctx.beginPath();
+                        ctx.arc(x * TILE_SIZE + TILE_SIZE/2, y * TILE_SIZE + TILE_SIZE/2, TILE_SIZE/3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+                    }
+
+                    // Draw grid lines
+                    ctx.strokeStyle = '#2c3e50';
+                    ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
+            }
+
+            // Draw Slug
+            ctx.fillStyle = '#f1c40f'; // Head color
+            ctx.beginPath();
+            ctx.arc(player.x * TILE_SIZE + TILE_SIZE/2, player.y * TILE_SIZE + TILE_SIZE/2, TILE_SIZE/2.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(player.x * TILE_SIZE + TILE_SIZE/2 - 5, player.y * TILE_SIZE + TILE_SIZE/2 - 5, 2, 0, Math.PI * 2);
+            ctx.arc(player.x * TILE_SIZE + TILE_SIZE/2 + 5, player.y * TILE_SIZE + TILE_SIZE/2 - 5, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            let dx = 0, dy = 0;
+            if (e.key === 'ArrowUp' || e.key === 'w') dy = -1;
+            if (e.key === 'ArrowDown' || e.key === 's') dy = 1;
+            if (e.key === 'ArrowLeft' || e.key === 'a') dx = -1;
+            if (e.key === 'ArrowRight' || e.key === 'd') dx = 1;
+
+            if (dx !== 0 || dy !== 0) {
+                const newX = player.x + dx;
+                const newY = player.y + dy;
+
+                if (newX >= 0 && newX < mapWidth && newY >= 0 && newY < mapHeight) {
+                    const targetIdx = newY * mapWidth + newX;
+                    // Cannot move into walls or already slimed tiles
+                    if (map[targetIdx] === 0 && !slimeMap[targetIdx]) {
+                        player.x = newX;
+                        player.y = newY;
+                        slimeMap[player.y * mapWidth + player.x] = true;
+                        draw();
+                        updateProgress();
+                    }
+                }
+            }
+        });
+
+        initLevel(currentLevel);
+    </script>
+</body>
+</html>
