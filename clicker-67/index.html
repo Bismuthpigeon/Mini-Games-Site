@@ -13,7 +13,7 @@
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
-            background: url("67-background.jpg") no-repeat center center fixed;
+            background: url("bg.jpg") no-repeat center center fixed;
             background-size: cover;
         }
 
@@ -270,7 +270,7 @@
 
         <div id="main-area">
             <div id="click-button-container">
-                <img src="67-button.jpg" id="click-button" alt="67 Button">
+                <img src="button.jpg" id="click-button" alt="67 Button">
             </div>
         </div>
 
@@ -282,7 +282,7 @@
         </div>
     </div>
 
-    <audio id="click-sound" src="67-music.mp3"></audio>
+    <audio id="click-sound" src="click.mp3"></audio>
 
     <script>
         // --- GAME STATE ---
@@ -433,11 +433,11 @@
         }
 
         function spawnParticles(x, y) {
-            // "simple 67.png" as particle
+            // "particle.png" as particle
             const particleCount = 3;
             for(let i=0; i<particleCount; i++) {
                 const p = document.createElement('img');
-                p.src = 'simple-67.png';
+                p.src = 'particle.png';
                 p.className = 'particle';
                 
                 // Random values for animation
