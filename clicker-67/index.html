@@ -13,7 +13,7 @@
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
-            background: url("67 background.jpg") no-repeat center center fixed;
+            background: url("67-background.jpg") no-repeat center center fixed;
             background-size: cover;
         }
 
@@ -250,7 +250,7 @@
 
     <div id="game-container">
         <div id="stats-bar">
-            <button class="back-button" onclick="location.href='../homepage.html'">Back to Home</button>
+            <button class="back-button" onclick="location.href='../index.html'">Back to Home</button>
             <div class="stat-item">
                 <div style="font-size: 14px; text-transform: uppercase;">67s Stashed</div>
                 <div id="currency-display" class="stat-value">0</div>
@@ -270,7 +270,7 @@
 
         <div id="main-area">
             <div id="click-button-container">
-                <img src="67 button.jpg" id="click-button" alt="67 Button">
+                <img src="67-button.jpg" id="click-button" alt="67 Button">
             </div>
         </div>
 
@@ -282,7 +282,7 @@
         </div>
     </div>
 
-    <audio id="click-sound" src="67 - QuickSounds.com.mp3"></audio>
+    <audio id="click-sound" src="67-music.mp3"></audio>
 
     <script>
         // --- GAME STATE ---
@@ -437,7 +437,7 @@
             const particleCount = 3;
             for(let i=0; i<particleCount; i++) {
                 const p = document.createElement('img');
-                p.src = 'simple 67.png';
+                p.src = 'simple-67.png';
                 p.className = 'particle';
                 
                 // Random values for animation
