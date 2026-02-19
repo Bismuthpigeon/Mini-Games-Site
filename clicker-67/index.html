@@ -12,7 +12,7 @@
             height: 100%;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
+            color: rgb(255, 255, 255);
             background: url("bg.jpg") no-repeat center center fixed;
             background-size: cover;
         }
@@ -39,16 +39,16 @@
             left: 0;
             right: 0;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(112, 35, 35, 0.8);
             display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 10;
-            border-bottom: 2px solid #ff4444;
+            border-bottom: 2px solid #793939;
         }
 
         .back-button {
-            background: #ff4444;
+            background: #120218;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -152,7 +152,7 @@
         }
 
         .shop-item:hover:not(.disabled) {
-            background: rgba(60, 60, 60, 0.9);
+            background: rgba(34, 34, 34, 0.9);
             border-color: #ff4444;
             transform: translateX(-5px);
         }
@@ -173,7 +173,7 @@
         .item-name {
             font-weight: bold;
             font-size: 20px;
-            color: #eee;
+            color: #ffffff;
         }
 
         .item-cost {
@@ -219,7 +219,7 @@
 
         .floating-text {
             position: absolute;
-            color: #44ff44;
+            color: #03ff03;
             font-weight: bold;
             pointer-events: none;
             animation: float-up 1s forwards;
@@ -297,7 +297,8 @@
                 mouse2: 0,
                 auto2: 0,
                 mouse3: 0,
-                auto3: 0
+                auto3: 0,
+                penis: 0
             }
         };
 
@@ -308,7 +309,8 @@
                 { id: 'mouse2', type: 'click', name: 'Super Clicker', power: 10, baseCost: 500, levelReq: 5, desc: "Each click gives +10 more 67." },
                 { id: 'auto2', type: 'auto', name: '67 Turbine', power: 15, baseCost: 1200, levelReq: 8, desc: "Generates 15 '67's per second." },
                 { id: 'mouse3', type: 'click', name: 'Mega 67 Press', power: 100, baseCost: 10000, levelReq: 15, desc: "Each click gives +100 more 67." },
-                { id: 'auto3', type: 'auto', name: '67 Singularity', power: 250, baseCost: 50000, levelReq: 25, desc: "Generates 250 '67's per second." }
+                { id: 'auto3', type: 'auto', name: '67 Singularity', power: 250, baseCost: 50000, levelReq: 25, desc: "Generates 250 '67's per second." },
+                { id: 'penis', type: 'click', name: '67 final', power: 6767, baseCost: 100000, levelReq: 30, desc: "You reached the end of 67s. Spread the word of the 67. Get +6767 67s per click" }
             ]
         };
 
@@ -418,7 +420,7 @@
                 state.currency -= cost;
                 state.items[upgrade.id]++;
                 // Level up speed is boosted slightly by buying items
-                addXP(cost * 0.01);
+                addXP(cost * 0.1);
                 updateUI();
             }
         }
