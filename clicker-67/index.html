@@ -420,7 +420,7 @@
                 state.currency -= cost;
                 state.items[upgrade.id]++;
                 // Level up speed is boosted slightly by buying items
-                addXP(cost * 0.1);
+                addXP(cost * 0.083);
                 updateUI();
             }
         }
@@ -430,7 +430,7 @@
             while (state.xp >= state.xpToNext) {
                 state.xp -= state.xpToNext;
                 state.level++;
-                state.xpToNext = Math.floor(state.xpToNext * 1.4);
+                state.xpToNext = Math.floor(state.xpToNext * 1.267);
             }
         }
 
